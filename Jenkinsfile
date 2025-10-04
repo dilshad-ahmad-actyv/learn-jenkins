@@ -1,44 +1,58 @@
 pipeline {
     agent any   // Run on any available Jenkins agent
 
-        environment {
-        PATH = "/Users/dilshadahmad/.nvm/versions/node/v18.20.3/bin:${env.NodeJS_PATH}"
+    environment {
+        PATH = "/Users/dilshadahmad/.nvm/versions/node/v18.20.3/bin:${env.PATH}"
+        APP_NAME = "nodejs-express"
     }
-    
+
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '10'))  // Keep only last 10 builds
+        timeout(time: 30, unit: 'MINUTES')             // Pipeline timeout
+    }
+
     stages {
         stage('Checkout') {
             steps {
-                // Pull code from your Git repo
+                echo 'Checking out code from Git repository...'
                 git branch: 'main', url: 'https://github.com/dilshad-ahmad-actyv/learn-jenkins.git'
             }
         }
 
-        stage('Install') {
+        stage('Verify Environment') {
             steps {
-                sh 'node -v'
-                sh 'npm -v'
-                sh 'npm install'
+                echo 'Verifying Node, npm, and PM2 versions...'
+                sh "/bin/bash -c 'node -v && npm -v && pm2 -v || echo \"PM2 not installed yet\"'"
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                echo 'Installing Node.js dependencies...'
+                sh "/bin/bash -c 'npm ci'"  // Use ci for clean install
             }
         }
 
         stage('Build') {
             steps {
-                // Optional: if you had build steps (e.g., transpile TypeScript, bundle frontend)
                 echo 'Build step (not needed for simple Express app)'
             }
         }
 
         stage('Test') {
             steps {
-                // Run tests (make sure you have a test script in package.json)
-                sh 'npm test || echo "No tests found, skipping..."'
+                echo 'Running tests...'
+                sh "/bin/bash -c 'npm test || echo \"No tests found, skipping...\"'"
             }
         }
 
         stage('Deploy') {
             steps {
-                // Simplest: start the app (replace with your real deployment process)
-                sh 'pm2 restart all || pm2 start ./bin/www --name nodejs-express'
+                echo 'Deploying the app with PM2...'
+                sh """
+                    /bin/bash -c 'pm2 restart $APP_NAME || pm2 start ./bin/www --name $APP_NAME'
+                    /bin/bash -c 'pm2 save'
+                """
             }
         }
     }
@@ -46,12 +60,13 @@ pipeline {
     post {
         always {
             echo 'Pipeline finished.'
-        }
-        failure {
-            echo 'Pipeline failed!'
+            sh "/bin/bash -c 'pm2 list || echo \"PM2 not running\"'"
         }
         success {
             echo 'Pipeline succeeded!'
+        }
+        failure {
+            echo 'Pipeline failed!'
         }
     }
 }
