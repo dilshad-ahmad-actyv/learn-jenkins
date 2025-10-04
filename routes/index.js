@@ -4,7 +4,7 @@ var router = express.Router();
 /* GET home page. */
 router.get("/", function (req, res, next) {
   res.render("index", {
-    title: "Express Tutorial",
+    title: "Express and Jenkins Tutorial",
     message: "This is the revision of Nodejs from scratch.",
   });
 });
