@@ -1,17 +1,22 @@
 pipeline {
     agent any   // Run on any available Jenkins agent
 
+        environment {
+        PATH = "/Users/dilshadahmad/.nvm/versions/node/v18.20.3/bin:${env.NodeJS_PATH}"
+    }
+    
     stages {
         stage('Checkout') {
             steps {
                 // Pull code from your Git repo
-                git branch: 'main', url: 'https://github.com/your-org/your-express-app.git'
+                git branch: 'main', url: 'https://github.com/dilshad-ahmad-actyv/learn-jenkins.git'
             }
         }
 
         stage('Install') {
             steps {
-                // Install Node.js dependencies
+                sh 'node -v'
+                sh 'npm -v'
                 sh 'npm install'
             }
         }
